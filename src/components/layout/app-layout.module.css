@@ -1,6 +1,9 @@
 .shell {
   min-height: 100vh;
-  background: #f8fbff;
+  background:
+    radial-gradient(circle at top left, rgba(186, 230, 253, 0.18), transparent 24%),
+    linear-gradient(to bottom, #f8fbff 0%, #eef7ff 46%, #f8fbff 100%);
+  color: var(--foreground);
 }
 
 .shellInner {
@@ -13,51 +16,53 @@
 .main {
   flex: 1;
   background:
-    radial-gradient(circle at 20% 70%, rgba(186, 230, 253, 0.25), transparent 18%),
-    radial-gradient(circle at 85% 75%, rgba(219, 234, 254, 0.3), transparent 18%),
-    linear-gradient(to bottom, #f8fbff 0%, #eef7ff 45%, #f8fbff 100%);
+    radial-gradient(circle at 20% 70%, rgba(186, 230, 253, 0.24), transparent 18%),
+    radial-gradient(circle at 85% 75%, rgba(219, 234, 254, 0.28), transparent 18%),
+    linear-gradient(
+      to bottom,
+      rgba(248, 251, 255, 0.82) 0%,
+      rgba(238, 247, 255, 0.78) 45%,
+      rgba(248, 251, 255, 0.82) 100%
+    );
 }
-
 
 .header {
   position: sticky;
   top: 0;
   z-index: 30;
   padding: 1rem 1.5rem 0.75rem;
-  background: rgba(248, 252, 255, 0.88);
+  background: color-mix(in srgb, var(--background) 84%, transparent);
   backdrop-filter: blur(22px) saturate(160%);
   -webkit-backdrop-filter: blur(22px) saturate(160%);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    inset 0 1px 0 color-mix(in srgb, white 72%, transparent),
     0 8px 24px rgba(148, 163, 184, 0.08);
 }
-
 
 .headerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.42);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   border-radius: 24px;
   padding: 0.95rem 1rem;
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.38),
-    rgba(255, 255, 255, 0.16)
+    color-mix(in srgb, var(--card) 64%, transparent),
+    color-mix(in srgb, var(--background) 34%, transparent)
   );
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 1px 0 color-mix(in srgb, white 62%, transparent),
     0 14px 34px rgba(125, 211, 252, 0.08);
 }
-
 
 .title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: rgb(15, 23, 42);
   letter-spacing: -0.02em;
+  color: var(--foreground);
 }
 
 .titleBlock {
@@ -71,9 +76,8 @@
   font-weight: 600;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(2, 132, 199, 0.72);
+  color: rgba(2, 132, 199, 0.78);
 }
-
 
 .headerActions {
   display: flex;
@@ -85,15 +89,14 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  border: 1px solid rgba(186, 230, 253, 0.85);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.72);
+  background: color-mix(in srgb, var(--card) 72%, transparent);
   padding: 0.5rem 0.75rem;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 10px 24px rgba(125, 211, 252, 0.16);
+    inset 0 1px 0 color-mix(in srgb, white 56%, transparent),
+    0 10px 24px rgba(125, 211, 252, 0.1);
 }
-
 
 .profileAvatar {
   display: flex;
@@ -102,7 +105,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: rgb(224, 242, 254);
+  background: color-mix(in srgb, rgb(186, 230, 253) 60%, var(--background));
   color: rgb(3, 105, 161);
   font-size: 0.875rem;
   font-weight: 600;
@@ -111,7 +114,7 @@
 .profileName {
   font-size: 0.875rem;
   font-weight: 500;
-  color: rgb(51, 65, 85);
+  color: var(--foreground);
 }
 
 .menu {
@@ -125,25 +128,26 @@
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(186, 230, 253, 0.9);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.78);
-  color: rgb(51, 65, 85);
+  background: color-mix(in srgb, var(--card) 76%, transparent);
+  color: var(--foreground);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 10px 24px rgba(125, 211, 252, 0.14);
+    inset 0 1px 0 color-mix(in srgb, white 52%, transparent),
+    0 10px 24px rgba(125, 211, 252, 0.1);
   transition:
     background 0.2s ease,
     transform 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .menuTrigger:hover {
-  background: rgba(240, 249, 255, 0.95);
+  background: color-mix(in srgb, var(--accent) 82%, transparent);
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    0 14px 28px rgba(125, 211, 252, 0.2);
+    inset 0 1px 0 color-mix(in srgb, white 58%, transparent),
+    0 14px 28px rgba(125, 211, 252, 0.14);
 }
 
 .menuIcon {
@@ -157,11 +161,11 @@
   top: 3rem;
   z-index: 20;
   min-width: 11rem;
-  border: 1px solid rgb(186, 230, 253);
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: color-mix(in srgb, var(--popover) 92%, transparent);
   padding: 0.5rem;
-  box-shadow: 0 20px 40px rgba(125, 211, 252, 0.18);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
   backdrop-filter: blur(20px);
 }
 
@@ -172,12 +176,14 @@
   padding: 0.5rem 0.75rem;
   text-align: left;
   font-size: 0.875rem;
-  color: rgb(51, 65, 85);
-  transition: background 0.2s ease;
+  color: var(--foreground);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .menuLink:hover {
-  background: rgb(240, 249, 255);
+  background: color-mix(in srgb, var(--accent) 78%, transparent);
 }
 
 .breadcrumbs {
@@ -194,7 +200,7 @@
 
 .breadcrumbLink {
   font-weight: 500;
-  color: rgb(100, 116, 139);
+  color: var(--muted-foreground);
   transition: color 0.2s ease;
 }
 
@@ -203,10 +209,119 @@
 }
 
 .breadcrumbSeparator {
-  color: rgb(203, 213, 225);
+  color: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
 }
 
 .breadcrumbCurrent {
   font-weight: 500;
   color: rgb(3, 105, 161);
+}
+
+:global(.dark) .shell {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(56, 189, 248, 0.12), transparent 16%),
+    radial-gradient(circle at 82% 22%, rgba(96, 165, 250, 0.08), transparent 18%),
+    radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.95), transparent 45%),
+    linear-gradient(to bottom, #07111c 0%, #0b1220 26%, #111827 62%, #0a1220 100%);
+}
+
+:global(.dark) .main {
+  background:
+    radial-gradient(circle at 16% 16%, rgba(56, 189, 248, 0.1), transparent 14%),
+    radial-gradient(circle at 78% 24%, rgba(96, 165, 250, 0.07), transparent 16%),
+    radial-gradient(circle at 30% 72%, rgba(30, 41, 59, 0.5), transparent 24%),
+    radial-gradient(circle at 82% 78%, rgba(15, 23, 42, 0.42), transparent 22%),
+    linear-gradient(
+      to bottom,
+      rgba(7, 17, 28, 0.92) 0%,
+      rgba(11, 18, 32, 0.9) 28%,
+      rgba(17, 24, 39, 0.92) 64%,
+      rgba(10, 18, 32, 0.96) 100%
+    );
+}
+
+:global(.dark) .header {
+  background: rgba(9, 16, 29, 0.72);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 12px 30px rgba(2, 6, 23, 0.32);
+}
+
+:global(.dark) .headerRow {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: linear-gradient(
+    to bottom right,
+    rgba(20, 30, 48, 0.82),
+    rgba(12, 19, 32, 0.72)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(2, 6, 23, 0.24);
+}
+
+:global(.dark) .kicker {
+  color: rgba(125, 211, 252, 0.82);
+}
+
+:global(.dark) .profilePill {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(18, 28, 45, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 12px 24px rgba(2, 6, 23, 0.22);
+}
+
+:global(.dark) .profileAvatar {
+  background: rgba(14, 165, 233, 0.16);
+  color: rgb(186, 230, 253);
+}
+
+:global(.dark) .menuTrigger {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(18, 28, 45, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 10px 24px rgba(2, 6, 23, 0.22);
+}
+
+:global(.dark) .menuTrigger:hover {
+  background: rgba(28, 41, 61, 0.88);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 28px rgba(2, 6, 23, 0.28);
+}
+
+:global(.dark) .menuContent {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(10, 18, 31, 0.92);
+  box-shadow: 0 24px 44px rgba(2, 6, 23, 0.42);
+}
+
+:global(.dark) .menuLink:hover {
+  background: rgba(30, 41, 59, 0.75);
+}
+
+:global(.dark) .breadcrumbLink:hover,
+:global(.dark) .breadcrumbCurrent {
+  color: rgb(125, 211, 252);
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0.9rem 1rem 0.7rem;
+  }
+
+  .headerRow {
+    gap: 1rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .breadcrumbs {
+    padding: 0.75rem 1rem 0;
+  }
+
+  .profileName {
+    display: none;
+  }
 }
