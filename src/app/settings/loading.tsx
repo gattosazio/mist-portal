@@ -1,5 +1,10 @@
-import { PageSkeleton } from "@/components/skeleton/page-skeleton";
+import { AppShellSkeleton } from "@/components/skeleton/app-shell-skeleton";
+import { SettingsPageSkeleton } from "@/components/skeleton/settings-page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton title="Settings" />;
+  return (
+    <AppShellSkeleton title="Settings">
+      <SettingsPageSkeleton />
+    </AppShellSkeleton>
+  );
 }
