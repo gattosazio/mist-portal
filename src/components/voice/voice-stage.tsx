@@ -14,6 +14,7 @@ import {
 import styles from "./voice-panel.module.css";
 import WaveformRing from "./wave-form-ring";
 import { getLiveKitToken } from "@/actions/rtc";
+import { TypewriterText } from "@/components/shared/typewriter-text";
 
 const LIVEKIT_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || "";
 const AGENT_IDENTITY = "MISSU_CORE";
@@ -23,6 +24,7 @@ type TranscriptItem = {
   id: string;
   speaker: "user" | "agent";
   text: string;
+  animate?: boolean;
 };
 
 type TranscriptEventPayload = {
@@ -120,6 +122,7 @@ export function VoiceStage() {
         id: `${data.speaker}-${data.createdAt || Date.now()}-${Math.random().toString(36).slice(2)}`,
         speaker: data.speaker,
         text: data.text.trim(),
+        animate: true,
       });
     } catch {
       setErrorText("Received an unreadable transcript event.");
@@ -259,8 +262,8 @@ export function VoiceStage() {
 
   const latestTranscript =
     transcriptItems.length > 0
-      ? transcriptItems[transcriptItems.length - 1].text
-      : "Transcript events will appear here once the voice session is active.";
+      ? transcriptItems[transcriptItems.length - 1]
+      : null;
 
   return (
     <section className={`${styles.glassCard} ${styles.stageCard}`}>
@@ -347,7 +350,18 @@ export function VoiceStage() {
 
         <div className={styles.transcriptCard}>
           <p className={styles.transcriptLabel}>Active Transcript</p>
-          <p className={styles.transcriptText}>{latestTranscript}</p>
+
+          <p className={styles.transcriptText}>
+            {latestTranscript ? (
+              <TypewriterText
+                text={latestTranscript.text}
+                animate={latestTranscript.animate !== false}
+                speedMs={14}
+              />
+            ) : (
+              "Transcript events will appear here once the voice session is active."
+            )}
+          </p>
 
           {transcriptItems.length > 0 ? (
             <div className="mt-4 space-y-3">
@@ -356,7 +370,13 @@ export function VoiceStage() {
                   <p className={styles.transcriptLabel}>
                     {item.speaker === "user" ? "ART" : "MISSU"}
                   </p>
-                  <p className={styles.transcriptText}>{item.text}</p>
+                  <p className={styles.transcriptText}>
+                    <TypewriterText
+                      text={item.text}
+                      animate={item.animate !== false}
+                      speedMs={14}
+                    />
+                  </p>
                 </div>
               ))}
             </div>
