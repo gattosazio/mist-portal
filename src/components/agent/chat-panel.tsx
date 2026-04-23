@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./agent-panel.module.css";
+import { askPolicyQuestion, type ConversationState } from "@/actions/rag";
 
 type ChatPanelProps = {
   initialMessage?: string;
@@ -20,56 +21,98 @@ export function ChatPanel({
   userName = "Art",
   onBack,
 }: ChatPanelProps) {
-  const initialMessages = useMemo<Message[]>(
-    () => [
-      {
-        id: "assistant-welcome",
-        role: "assistant",
-        content: `You're now connected to MISSU. Ask about company policy, procedures, or site-specific guidance.`,
-      },
-      ...(initialMessage.trim()
-        ? [
-            {
-              id: "user-initial",
-              role: "user" as const,
-              content: initialMessage,
-            },
-            {
-              id: "assistant-followup",
-              role: "assistant" as const,
-              content:
-                "I’m ready to help with that. This is where the live response flow, citations, and follow-up questions can appear.",
-            },
-          ]
-        : []),
-    ],
-    [initialMessage]
-  );
-
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "assistant-welcome",
+      role: "assistant",
+      content:
+        "You're now connected to MISSU. Ask about company policy, procedures, or department-specific guidance.",
+    },
+  ]);
   const [draft, setDraft] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationState, setConversationState] = useState<ConversationState | null>(null);
+  const hasSentInitialMessage = useRef(false);
 
-  function handleSend() {
+  async function sendMessage(question: string) {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion || isLoading) {
+      return;
+    }
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: trimmedQuestion,
+    };
+
+    setMessages((current) => [...current, userMessage]);
+    setIsLoading(true);
+
+    const currentConversationState = conversationState;
+    const lastPolicyQuestion =
+      currentConversationState?.lastPolicyQuestion || trimmedQuestion;
+
+    try {
+      const data = await askPolicyQuestion({
+        question: trimmedQuestion,
+        conversationState: currentConversationState,
+      });
+
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: data.answer || "MISSU did not return a response.",
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
+
+      if (data.needsClarification && data.clarificationType === "department") {
+        setConversationState({
+          lastPolicyQuestion,
+          pendingClarification: {
+            type: "department",
+            options: data.clarificationOptions || [],
+          },
+        });
+      } else {
+        setConversationState(null);
+      }
+    } catch (error) {
+      const assistantMessage: Message = {
+        id: `assistant-error-${Date.now()}`,
+        role: "assistant",
+        content:
+          error instanceof Error
+            ? `I couldn't reach the backend: ${error.message}`
+            : "I couldn't reach the backend.",
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleSend() {
     if (!draft.trim()) {
       return;
     }
 
-    const nextMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: draft,
-    };
-
-    const placeholderReply: Message = {
-      id: `assistant-${Date.now()}`,
-      role: "assistant",
-      content:
-        "Message received. You can wire this next to your actual agent response pipeline.",
-    };
-
-    setMessages((current) => [...current, nextMessage, placeholderReply]);
+    const nextQuestion = draft;
     setDraft("");
+    await sendMessage(nextQuestion);
   }
+
+  useEffect(() => {
+    if (!initialMessage.trim() || hasSentInitialMessage.current) {
+      return;
+    }
+
+    hasSentInitialMessage.current = true;
+    void sendMessage(initialMessage);
+  }, [initialMessage]);
 
   return (
     <section className={styles.chatPage}>
@@ -102,6 +145,13 @@ export function ChatPanel({
               <p className={styles.messageText}>{message.content}</p>
             </article>
           ))}
+
+          {isLoading ? (
+            <article className={`${styles.message} ${styles.assistantMessage}`}>
+              <span className={styles.messageRole}>MISSU</span>
+              <p className={styles.messageText}>Thinking...</p>
+            </article>
+          ) : null}
         </div>
 
         <div className={styles.composer}>
@@ -112,15 +162,21 @@ export function ChatPanel({
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                handleSend();
+                void handleSend();
               }
             }}
             placeholder="Type your next question..."
             className={styles.chatInput}
+            disabled={isLoading}
           />
 
-          <button type="button" className={styles.sendButton} onClick={handleSend}>
-            Send
+          <button
+            type="button"
+            className={styles.sendButton}
+            onClick={() => void handleSend()}
+            disabled={isLoading}
+          >
+            {isLoading ? "Sending..." : "Send"}
           </button>
         </div>
       </div>

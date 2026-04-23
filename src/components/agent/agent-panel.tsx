@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import styles from "./agent-panel.module.css";
 import { ChatPanel } from "./chat-panel";
+import Link from "next/link";
 
 type AgentPanelProps = {
   name?: string;
@@ -22,9 +23,9 @@ export function AgentPanel({ name = "Art" }: AgentPanelProps) {
     setMode("chat");
   }
 
-  function handleVoiceStart() {
-    setMode("chat");
-  }
+  // function handleVoiceStart() {
+  //   setMode("chat");
+  // }
 
   if (mode === "chat") {
     return <ChatPanel initialMessage={draft} userName={name} onBack={() => setMode("idle")} />;
@@ -42,7 +43,7 @@ export function AgentPanel({ name = "Art" }: AgentPanelProps) {
           </h2>
 
           <p className={styles.subtitle}>
-            Ask about company rules, procedures, or site-specific guidance and MISSU will help
+            Ask about company rules, procedures, or department-specific policies and MISSU will help
             you navigate the right policy context.
           </p>
 
@@ -60,9 +61,12 @@ export function AgentPanel({ name = "Art" }: AgentPanelProps) {
                 Start Chat
               </button>
 
-              <button type="button" className={styles.voiceButton} onClick={handleVoiceStart}>
+              <Link
+                href="/voice"
+                className={styles.voiceButton}
+              >
                 Voice Session
-              </button>
+              </Link>
             </div>
           </form>
         </div>
