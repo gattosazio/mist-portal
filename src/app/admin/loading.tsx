@@ -1,5 +1,10 @@
-import { PageSkeleton } from "@/components/skeleton/page-skeleton";
+import { AppShellSkeleton } from "@/components/skeleton/app-shell-skeleton";
+import { AdminPageSkeleton } from "@/components/skeleton/admin-page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton title="Admin Panel" />;
+  return (
+    <AppShellSkeleton title="Admin Panel">
+      <AdminPageSkeleton />
+    </AppShellSkeleton>
+  );
 }

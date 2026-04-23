@@ -1,5 +1,10 @@
-import { PageSkeleton } from "@/components/skeleton/page-skeleton";
+import { AppShellSkeleton } from "@/components/skeleton/app-shell-skeleton";
+import { VoicePageSkeleton } from "@/components/skeleton/voice-page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton title="Voice Session" />;
+  return (
+    <AppShellSkeleton title="Voice Session" userName="Art">
+      <VoicePageSkeleton />
+    </AppShellSkeleton>
+  );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./agent-panel.module.css";
 import { askPolicyQuestion, type ConversationState } from "@/actions/rag";
+import { TypewriterText } from "@/components/shared/typewriter-text";
 
 type ChatPanelProps = {
   initialMessage?: string;
@@ -14,6 +15,7 @@ type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  animate?: boolean;
 };
 
 export function ChatPanel({
@@ -27,6 +29,7 @@ export function ChatPanel({
       role: "assistant",
       content:
         "You're now connected to MISSU. Ask about company policy, procedures, or department-specific guidance.",
+      animate: true,
     },
   ]);
   const [draft, setDraft] = useState("");
@@ -45,6 +48,7 @@ export function ChatPanel({
       id: `user-${Date.now()}`,
       role: "user",
       content: trimmedQuestion,
+      animate: false,
     };
 
     setMessages((current) => [...current, userMessage]);
@@ -64,6 +68,7 @@ export function ChatPanel({
         id: `assistant-${Date.now()}`,
         role: "assistant",
         content: data.answer || "MISSU did not return a response.",
+        animate: true,
       };
 
       setMessages((current) => [...current, assistantMessage]);
@@ -87,6 +92,7 @@ export function ChatPanel({
           error instanceof Error
             ? `I couldn't reach the backend: ${error.message}`
             : "I couldn't reach the backend.",
+        animate: true,
       };
 
       setMessages((current) => [...current, assistantMessage]);
@@ -142,14 +148,26 @@ export function ChatPanel({
               <span className={styles.messageRole}>
                 {message.role === "user" ? userName : "MISSU"}
               </span>
-              <p className={styles.messageText}>{message.content}</p>
+              <p className={styles.messageText}>
+                {message.role === "assistant" ? (
+                  <TypewriterText
+                    text={message.content}
+                    animate={message.animate !== false}
+                    speedMs={14}
+                  />
+                ) : (
+                  message.content
+                )}
+              </p>
             </article>
           ))}
 
           {isLoading ? (
             <article className={`${styles.message} ${styles.assistantMessage}`}>
               <span className={styles.messageRole}>MISSU</span>
-              <p className={styles.messageText}>Thinking...</p>
+              <p className={styles.messageText}>
+                <TypewriterText text="Thinking..." animate speedMs={40} />
+              </p>
             </article>
           ) : null}
         </div>
