@@ -1,58 +1,50 @@
 .panel {
   min-height: calc(100vh - 88px);
-  padding: 2rem 1.5rem 2.5rem;
+  padding: 1.5rem 1rem 2rem;
 }
 
 .layout {
-  max-width: 1440px;
+  max-width: 90rem;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1.65fr 0.95fr;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .primaryColumn {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .sideColumn {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .dualGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .card {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  border-radius: 32px;
-  background: linear-gradient(
-    to bottom right,
-    rgba(255, 255, 255, 0.72),
-    rgba(255, 255, 255, 0.4)
-  );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.22),
-    0 22px 60px rgba(148, 163, 184, 0.12);
-  backdrop-filter: blur(24px) saturate(155%);
-  -webkit-backdrop-filter: blur(24px) saturate(155%);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--card) 95%, transparent);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(14px);
 }
 
 .cardGlow {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top right, rgba(125, 211, 252, 0.24), transparent 26%),
-    radial-gradient(circle at bottom left, rgba(219, 234, 254, 0.24), transparent 30%);
+    radial-gradient(circle at top right, rgba(125, 211, 252, 0.12), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(186, 230, 253, 0.14), transparent 34%);
   pointer-events: none;
 }
 
@@ -75,21 +67,22 @@
 
 .kicker,
 .sectionKicker {
+  margin: 0;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgb(2, 132, 199);
 }
 
 .heroTitle {
-  margin-top: 0.55rem;
+  margin: 0.55rem 0 0;
   max-width: 34rem;
-  font-size: 2rem;
+  font-size: clamp(1.8rem, 3vw, 2.35rem);
   line-height: 1.06;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  color: rgb(15, 23, 42);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  color: var(--foreground);
 }
 
 .metrics {
@@ -101,27 +94,26 @@
 
 .metricPill {
   min-width: 88px;
-  border-radius: 24px;
-  border: 1px solid rgba(186, 230, 253, 0.95);
-  background: rgba(255, 255, 255, 0.74);
-  padding: 0.75rem 0.95rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--background) 84%, transparent);
   text-align: left;
-  box-shadow: 0 10px 24px rgba(125, 211, 252, 0.12);
 }
 
 .metricValue {
   display: block;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 700;
   line-height: 1;
-  color: rgb(14, 116, 144);
+  color: var(--foreground);
 }
 
 .metricLabel {
   display: block;
-  margin-top: 0.3rem;
+  margin-top: 0.32rem;
   font-size: 0.74rem;
-  color: rgb(100, 116, 139);
+  color: var(--muted-foreground);
 }
 
 .sectionHeader {
@@ -132,21 +124,22 @@
 }
 
 .sectionTitle {
-  margin-top: 0.45rem;
+  margin: 0.45rem 0 0;
   font-size: 1.05rem;
-  font-weight: 600;
-  color: rgb(15, 23, 42);
+  font-weight: 650;
+  color: var(--foreground);
 }
 
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  border-radius: 9999px;
-  background: rgba(224, 242, 254, 0.9);
-  color: rgb(3, 105, 161);
   padding: 0.42rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--background) 82%, transparent);
   font-size: 0.74rem;
   font-weight: 600;
+  color: var(--foreground);
 }
 
 .fieldGroup {
@@ -156,19 +149,19 @@
 .label {
   display: block;
   margin-bottom: 0.55rem;
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: rgb(51, 65, 85);
+  color: var(--foreground);
 }
 
 .input,
 .textarea {
   width: 100%;
-  border: 1px solid rgba(186, 230, 253, 0.95);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.86);
-  color: rgb(30, 41, 59);
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--input);
+  border-radius: 1rem;
+  background: var(--background);
+  color: var(--foreground);
   outline: none;
   transition:
     border-color 0.2s ease,
@@ -178,13 +171,14 @@
 
 .input::placeholder,
 .textarea::placeholder {
-  color: rgb(148, 163, 184);
+  color: var(--muted-foreground);
+  opacity: 0.8;
 }
 
 .input:focus,
 .textarea:focus {
-  border-color: rgb(56, 189, 248);
-  box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.18);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 24%, transparent);
 }
 
 .textarea {
@@ -211,43 +205,45 @@
 .secondaryButton,
 .ghostButton {
   appearance: none;
-  border-radius: 9999px;
   padding: 0.78rem 1.1rem;
+  border-radius: 9999px;
   font-size: 0.88rem;
   font-weight: 600;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
-    border-color 0.18s ease;
+    border-color 0.18s ease,
+    color 0.18s ease;
+  cursor: pointer;
 }
 
 .primaryButton {
-  border: 1px solid rgba(125, 211, 252, 0.95);
-  background: linear-gradient(to bottom, rgba(224, 242, 254, 0.96), rgba(186, 230, 253, 0.85));
-  color: rgb(7, 89, 133);
+  border: 1px solid transparent;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .secondaryButton,
 .ghostButton {
-  border: 1px solid rgba(186, 230, 253, 0.95);
-  background: rgba(255, 255, 255, 0.76);
-  color: rgb(51, 65, 85);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  background: color-mix(in srgb, var(--background) 84%, transparent);
+  color: var(--foreground);
 }
 
 .primaryButton:hover,
 .secondaryButton:hover,
 .ghostButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(125, 211, 252, 0.16);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
 }
 
 .responsePreview {
   margin-top: 1.2rem;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.66);
-  background: rgba(255, 255, 255, 0.64);
   padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--background) 82%, transparent);
 }
 
 .previewHeader {
@@ -266,19 +262,20 @@
 }
 
 .previewMode {
-  border-radius: 9999px;
-  background: rgba(224, 242, 254, 0.9);
-  color: rgb(3, 105, 161);
   padding: 0.28rem 0.58rem;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--card) 84%, transparent);
   font-size: 0.72rem;
   font-weight: 600;
+  color: var(--foreground);
 }
 
 .previewText {
   margin-top: 0.8rem;
   font-size: 0.92rem;
   line-height: 1.65;
-  color: rgb(51, 65, 85);
+  color: var(--muted-foreground);
 }
 
 .eventList {
@@ -289,10 +286,10 @@
 }
 
 .eventItem {
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.66);
-  background: rgba(255, 255, 255, 0.62);
   padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 1.1rem;
+  background: color-mix(in srgb, var(--background) 82%, transparent);
 }
 
 .eventMeta {
@@ -312,38 +309,40 @@
 
 .eventTime {
   font-size: 0.76rem;
-  color: rgb(100, 116, 139);
+  color: var(--muted-foreground);
 }
 
 .eventTitle {
-  margin-top: 0.6rem;
+  margin: 0.6rem 0 0;
   font-size: 0.95rem;
-  font-weight: 600;
-  color: rgb(15, 23, 42);
+  font-weight: 650;
+  color: var(--foreground);
 }
 
 .eventDetail {
-  margin-top: 0.35rem;
+  margin: 0.35rem 0 0;
   font-size: 0.86rem;
   line-height: 1.6;
-  color: rgb(71, 85, 105);
+  color: var(--muted-foreground);
 }
 
 .noteList {
-  margin-top: 1rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
 }
 
 .noteItem {
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  padding: 0.9rem 1rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--background) 82%, transparent);
   font-size: 0.88rem;
   line-height: 1.6;
-  color: rgb(51, 65, 85);
+  color: var(--muted-foreground);
 }
 
 @media (max-width: 1180px) {
