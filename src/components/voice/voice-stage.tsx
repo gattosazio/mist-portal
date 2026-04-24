@@ -13,7 +13,11 @@ import {
 } from "livekit-client";
 import styles from "./voice-panel.module.css";
 import WaveformRing from "./wave-form-ring";
-import { createVoiceSession, type LiveKitSessionResponse } from "@/actions/rtc";
+import {
+  closeVoiceSession,
+  createVoiceSession,
+  type LiveKitSessionResponse,
+} from "@/actions/rtc";
 import { TypewriterText } from "@/components/shared/typewriter-text";
 
 const LIVEKIT_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || "";
@@ -55,8 +59,12 @@ export function VoiceStage() {
   const localAudioTrackRef = useRef<LocalAudioTrack | null>(null);
   const remoteAudioElementRef = useRef<HTMLAudioElement | null>(null);
   const currentRemoteTrackRef = useRef<RemoteTrack | null>(null);
+  const voiceSessionRef = useRef<LiveKitSessionResponse | null>(null);
+  const disconnectIntentRef = useRef(false);
+  const teardownPromiseRef = useRef<Promise<void> | null>(null);
 
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
@@ -66,8 +74,24 @@ export function VoiceStage() {
   const [voiceSession, setVoiceSession] = useState<LiveKitSessionResponse | null>(null);
 
   useEffect(() => {
+    voiceSessionRef.current = voiceSession;
+  }, [voiceSession]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const session = voiceSessionRef.current;
+      if (!session?.sessionId) {
+        return;
+      }
+
+      void closeVoiceSession(session.sessionId, { keepalive: true }).catch(() => {});
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
-      void disconnectRoom();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      void disconnectRoom({ notifyBackend: true, reason: "component unmount" });
     };
   }, []);
 
@@ -130,26 +154,58 @@ export function VoiceStage() {
     }
   }
 
-  async function disconnectRoom() {
-    try {
-      detachRemoteTrack();
+  async function disconnectRoom(options?: { notifyBackend?: boolean; reason?: string }) {
+    if (teardownPromiseRef.current) {
+      return teardownPromiseRef.current;
+    }
 
-      await localAudioTrackRef.current?.stop();
-      localAudioTrackRef.current = null;
+    const notifyBackend = options?.notifyBackend ?? true;
+    const reason = options?.reason || "client teardown";
+    const currentSession = voiceSessionRef.current;
 
-      roomRef.current?.disconnect();
-      roomRef.current = null;
-    } catch {}
+    const teardown = (async () => {
+      setIsDisconnecting(true);
+      disconnectIntentRef.current = true;
+      setStatusText("Ending voice session...");
 
-    setVoiceSession(null);
-    setIsConnected(false);
-    setMicOn(false);
-    setAgentSpeaking(false);
-    setStatusText("Voice session disconnected.");
+      try {
+        detachRemoteTrack();
+
+        await localAudioTrackRef.current?.stop();
+        localAudioTrackRef.current = null;
+
+        roomRef.current?.disconnect();
+        roomRef.current = null;
+
+        if (notifyBackend && currentSession?.sessionId) {
+          try {
+            await closeVoiceSession(currentSession.sessionId, { keepalive: true });
+          } catch (error) {
+            console.error("[VOICE DEBUG] closeVoiceSession failed", error);
+          }
+        }
+      } catch (error) {
+        console.error("[VOICE DEBUG] disconnectRoom failed", error);
+      } finally {
+        voiceSessionRef.current = null;
+        setVoiceSession(null);
+        setTranscriptItems([]);
+        setIsConnected(false);
+        setMicOn(false);
+        setAgentSpeaking(false);
+        setIsDisconnecting(false);
+        setStatusText("Voice session disconnected.");
+        disconnectIntentRef.current = false;
+        teardownPromiseRef.current = null;
+      }
+    })();
+
+    teardownPromiseRef.current = teardown;
+    return teardown;
   }
 
   async function connectRoom() {
-    if (isConnecting || isConnected) return;
+    if (isConnecting || isConnected || isDisconnecting) return;
 
     if (!LIVEKIT_URL) {
       setErrorText("Missing NEXT_PUBLIC_LIVEKIT_URL in the frontend environment.");
@@ -171,31 +227,22 @@ export function VoiceStage() {
 
       room
         .on(RoomEvent.Connected, () => {
-          console.log("[VOICE DEBUG] room connected", {
-            roomName: session.roomName,
-            localParticipant: room.localParticipant.identity,
-          });
-
           setIsConnected(true);
           setStatusText(`Connected to ${session.roomName}. Microphone is live.`);
         })
-        .on(RoomEvent.ConnectionStateChanged, (state) => {
-          console.log("[VOICE DEBUG] connection state changed", {
-            roomName: session.roomName,
-            state,
-          });
-        })
         .on(RoomEvent.Disconnected, () => {
-          console.log("[VOICE DEBUG] room disconnected", {
-            roomName: session.roomName,
-          });
-
           detachRemoteTrack();
-          setVoiceSession(null);
           setIsConnected(false);
           setMicOn(false);
           setAgentSpeaking(false);
-          setStatusText("Voice session disconnected.");
+
+          if (!disconnectIntentRef.current && voiceSessionRef.current?.sessionId) {
+            void closeVoiceSession(voiceSessionRef.current.sessionId, {
+              keepalive: true,
+            }).catch((error) => {
+              console.error("[VOICE DEBUG] forced closeVoiceSession failed", error);
+            });
+          }
         })
         .on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
           const remoteSpeaking = speakers.some(
@@ -204,21 +251,9 @@ export function VoiceStage() {
           setAgentSpeaking(remoteSpeaking);
         })
         .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-          console.log("[VOICE DEBUG] track subscribed", {
-            participantIdentity: participant.identity,
-            kind: track.kind,
-            trackName: publication.trackName,
-          });
-
           attachRemoteTrack(track, participant, publication);
         })
         .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
-          console.log("[VOICE DEBUG] track unsubscribed", {
-            participantIdentity: participant.identity,
-            kind: track.kind,
-            trackName: publication.trackName,
-          });
-
           if (
             participant.identity === AGENT_IDENTITY &&
             track.kind === Track.Kind.Audio
@@ -228,12 +263,6 @@ export function VoiceStage() {
           }
         })
         .on(RoomEvent.DataReceived, (payload, participant, _kind, topic) => {
-          console.log("[VOICE DEBUG] data received", {
-            participantIdentity: participant?.identity,
-            topic,
-            size: payload.byteLength,
-          });
-
           if (participant?.identity !== AGENT_IDENTITY) {
             return;
           }
@@ -241,18 +270,7 @@ export function VoiceStage() {
           handleTranscriptData(payload, topic);
         });
 
-
-            console.log("[VOICE DEBUG] attempting room.connect()", {
-        livekitUrl: LIVEKIT_URL,
-        roomName: session.roomName,
-      });
-
       await room.connect(LIVEKIT_URL, session.token);
-
-      console.log("[VOICE DEBUG] room.connect() succeeded", {
-        roomName: session.roomName,
-      });
-
 
       const audioTrack = await createLocalAudioTrack({
         echoCancellation: true,
@@ -274,6 +292,7 @@ export function VoiceStage() {
 
       roomRef.current = room;
       localAudioTrackRef.current = audioTrack;
+      voiceSessionRef.current = session;
       setVoiceSession(session);
       setMicOn(true);
       setStatusText(`Connected to ${session.roomName}. Sending microphone audio to Mist.`);
@@ -283,7 +302,7 @@ export function VoiceStage() {
 
       setErrorText(message);
       setStatusText("Unable to start voice session.");
-      await disconnectRoom();
+      await disconnectRoom({ notifyBackend: true, reason: "connect failure" });
     } finally {
       setIsConnecting(false);
     }
@@ -341,13 +360,15 @@ export function VoiceStage() {
             <span className={styles.liveDot} />
             {isConnecting
               ? "Connecting"
-              : agentSpeaking
-                ? "Mist Speaking"
-                : micOn
-                  ? "Listening"
-                  : isConnected
-                    ? "Mic Muted"
-                    : "Idle"}
+              : isDisconnecting
+                ? "Ending"
+                : agentSpeaking
+                  ? "Mist Speaking"
+                  : micOn
+                    ? "Listening"
+                    : isConnected
+                      ? "Mic Muted"
+                      : "Idle"}
           </div>
         </div>
 
@@ -366,7 +387,7 @@ export function VoiceStage() {
               className={`${styles.micControl} ${micOn ? styles.micControlOn : styles.micControlOff}`}
               aria-pressed={micOn}
               aria-label={micOn ? "Turn microphone off" : "Turn microphone on"}
-              disabled={isConnecting}
+              disabled={isConnecting || isDisconnecting}
             >
               <span className={styles.micHalo} />
               <MicIcon muted={!micOn} />
@@ -375,11 +396,13 @@ export function VoiceStage() {
             <p className={styles.micStatusText}>
               {isConnecting
                 ? "Connecting to LiveKit..."
-                : micOn
-                  ? "Mic is on and streaming to Mist"
-                  : isConnected
-                    ? "Mic is muted"
-                    : "Click the mic to start voice"}
+                : isDisconnecting
+                  ? "Ending voice session..."
+                  : micOn
+                    ? "Mic is on and streaming to Mist"
+                    : isConnected
+                      ? "Mic is muted"
+                      : "Click the mic to start voice"}
             </p>
           </div>
 
