@@ -14,7 +14,7 @@ export function AppHeader({
     <header className={styles.header}>
       <div className={styles.headerRow}>
         <div className={styles.titleBlock}>
-          <span className={styles.kicker}>MISSU Portal</span>
+          <span className={styles.kicker}>MIST Portal</span>
           <h1 className={styles.title}>{title}</h1>
         </div>
 
