@@ -13,7 +13,7 @@ import {
 } from "livekit-client";
 import styles from "./voice-panel.module.css";
 import WaveformRing from "./wave-form-ring";
-import { getLiveKitToken } from "@/actions/rtc";
+import { createVoiceSession, type LiveKitSessionResponse } from "@/actions/rtc";
 import { TypewriterText } from "@/components/shared/typewriter-text";
 
 const LIVEKIT_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL || "";
@@ -63,6 +63,7 @@ export function VoiceStage() {
   const [statusText, setStatusText] = useState("Click the mic to start a voice session.");
   const [errorText, setErrorText] = useState("");
   const [transcriptItems, setTranscriptItems] = useState<TranscriptItem[]>([]);
+  const [voiceSession, setVoiceSession] = useState<LiveKitSessionResponse | null>(null);
 
   useEffect(() => {
     return () => {
@@ -140,6 +141,7 @@ export function VoiceStage() {
       roomRef.current = null;
     } catch {}
 
+    setVoiceSession(null);
     setIsConnected(false);
     setMicOn(false);
     setAgentSpeaking(false);
@@ -155,11 +157,12 @@ export function VoiceStage() {
     }
 
     setErrorText("");
+    setTranscriptItems([]);
     setIsConnecting(true);
-    setStatusText("Requesting microphone access...");
+    setStatusText("Creating secure voice session...");
 
     try {
-      const token = await getLiveKitToken();
+      const session = await createVoiceSession();
 
       const room = new Room({
         adaptiveStream: true,
@@ -168,11 +171,27 @@ export function VoiceStage() {
 
       room
         .on(RoomEvent.Connected, () => {
+          console.log("[VOICE DEBUG] room connected", {
+            roomName: session.roomName,
+            localParticipant: room.localParticipant.identity,
+          });
+
           setIsConnected(true);
-          setStatusText("Connected. Microphone is live.");
+          setStatusText(`Connected to ${session.roomName}. Microphone is live.`);
+        })
+        .on(RoomEvent.ConnectionStateChanged, (state) => {
+          console.log("[VOICE DEBUG] connection state changed", {
+            roomName: session.roomName,
+            state,
+          });
         })
         .on(RoomEvent.Disconnected, () => {
+          console.log("[VOICE DEBUG] room disconnected", {
+            roomName: session.roomName,
+          });
+
           detachRemoteTrack();
+          setVoiceSession(null);
           setIsConnected(false);
           setMicOn(false);
           setAgentSpeaking(false);
@@ -185,9 +204,21 @@ export function VoiceStage() {
           setAgentSpeaking(remoteSpeaking);
         })
         .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+          console.log("[VOICE DEBUG] track subscribed", {
+            participantIdentity: participant.identity,
+            kind: track.kind,
+            trackName: publication.trackName,
+          });
+
           attachRemoteTrack(track, participant, publication);
         })
         .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+          console.log("[VOICE DEBUG] track unsubscribed", {
+            participantIdentity: participant.identity,
+            kind: track.kind,
+            trackName: publication.trackName,
+          });
+
           if (
             participant.identity === AGENT_IDENTITY &&
             track.kind === Track.Kind.Audio
@@ -197,6 +228,12 @@ export function VoiceStage() {
           }
         })
         .on(RoomEvent.DataReceived, (payload, participant, _kind, topic) => {
+          console.log("[VOICE DEBUG] data received", {
+            participantIdentity: participant?.identity,
+            topic,
+            size: payload.byteLength,
+          });
+
           if (participant?.identity !== AGENT_IDENTITY) {
             return;
           }
@@ -204,7 +241,18 @@ export function VoiceStage() {
           handleTranscriptData(payload, topic);
         });
 
-      await room.connect(LIVEKIT_URL, token);
+
+            console.log("[VOICE DEBUG] attempting room.connect()", {
+        livekitUrl: LIVEKIT_URL,
+        roomName: session.roomName,
+      });
+
+      await room.connect(LIVEKIT_URL, session.token);
+
+      console.log("[VOICE DEBUG] room.connect() succeeded", {
+        roomName: session.roomName,
+      });
+
 
       const audioTrack = await createLocalAudioTrack({
         echoCancellation: true,
@@ -226,8 +274,9 @@ export function VoiceStage() {
 
       roomRef.current = room;
       localAudioTrackRef.current = audioTrack;
+      setVoiceSession(session);
       setMicOn(true);
-      setStatusText("Connected. Sending microphone audio to MISSU.");
+      setStatusText(`Connected to ${session.roomName}. Sending microphone audio to Mist.`);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to connect voice session.";
@@ -252,11 +301,19 @@ export function VoiceStage() {
     if (micOn) {
       await track.mute();
       setMicOn(false);
-      setStatusText("Microphone muted.");
+      setStatusText(
+        voiceSession
+          ? `Microphone muted for ${voiceSession.roomName}.`
+          : "Microphone muted."
+      );
     } else {
       await track.unmute();
       setMicOn(true);
-      setStatusText("Microphone live.");
+      setStatusText(
+        voiceSession
+          ? `Microphone live in ${voiceSession.roomName}.`
+          : "Microphone live."
+      );
     }
   }
 
@@ -285,7 +342,7 @@ export function VoiceStage() {
             {isConnecting
               ? "Connecting"
               : agentSpeaking
-                ? "MISSU Speaking"
+                ? "Mist Speaking"
                 : micOn
                   ? "Listening"
                   : isConnected
@@ -327,7 +384,7 @@ export function VoiceStage() {
           </div>
 
           <div className={`${styles.participantCard} ${styles.agentCard}`}>
-            <p className={styles.participantName}>Mist</p>
+            <p className={styles.participantName}>MIST</p>
 
             <div className={styles.agentVisual}>
               <div className={styles.ringScene}>
@@ -345,10 +402,16 @@ export function VoiceStage() {
               {statusText}
               {errorText ? ` ${errorText}` : ""}
             </p>
+
+            {voiceSession ? (
+              <p className={styles.agentStatusText}>
+                Session: {voiceSession.roomName}
+              </p>
+            ) : null}
           </div>
         </div>
 
-                <div className={styles.transcriptCard}>
+        <div className={styles.transcriptCard}>
           <p className={styles.transcriptLabel}>Active Transcript</p>
 
           {transcriptItems.length > 0 ? (
@@ -356,7 +419,7 @@ export function VoiceStage() {
               {transcriptItems.map((item) => (
                 <div key={item.id}>
                   <p className={styles.transcriptLabel}>
-                    {item.speaker === "user" ? "ART" : "Mist"}
+                    {item.speaker === "user" ? "ART" : "MIST"}
                   </p>
                   <p className={styles.transcriptText}>
                     <TypewriterText
@@ -374,7 +437,6 @@ export function VoiceStage() {
             </p>
           )}
         </div>
-
       </div>
     </section>
   );
